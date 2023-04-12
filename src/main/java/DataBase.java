@@ -34,6 +34,21 @@ public class DataBase {
         }
     }
 
+    public void addNewRowInTable(String table, String[] columnArray, String[] values){
+        try{
+            statement.executeUpdate(
+                    """
+                    INSERT INTO %s
+                    (%s)
+                    values
+                    (%s);
+                    """.formatted(table, String.join(", ", columnArray), String.join(", ", values)));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
     public void addStudent(String lastName, String firstName, String middleName, String classTitleFk){
         try {
             statement.executeUpdate(
