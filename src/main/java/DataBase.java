@@ -36,6 +36,9 @@ public class DataBase {
 
     public void addNewRowInTable(String table, String[] columnArray, String[] values){
         try{
+            if (table.equals("student")){
+                throw new Exception("Добавляйте новые записи в student с помощью addStudent");
+            }
             statement.executeUpdate(
                     """
                     INSERT INTO %s
@@ -51,10 +54,31 @@ public class DataBase {
 
     public void addStudent(String lastName, String firstName, String middleName, String classTitleFk){
         try {
+            int studentCountInt = 0;
+            ResultSet studentCount = statement.executeQuery(
+                    """
+                    SELECT student.id FROM student
+                    WHERE student.profile_title_fk = '%s';
+                    """.formatted(classTitleFk)); // Получаем кол-во записей студентов на данном специальности
+            while(studentCount.next()){
+                studentCountInt += 1;
+            }
+            System.out.println(studentCountInt);
+            ResultSet studentAmountInClass = statement.executeQuery(
+                    """
+                    SELECT profile.student_amount FROM profile
+                    WHERE profile.title = '%s';
+                    """.formatted(classTitleFk));
+            int studentAmountInClassInt = 0;
+            while (studentAmountInClass.next())
+                studentAmountInClassInt = studentAmountInClass.getInt(1);
+            if (studentCountInt >= studentAmountInClassInt){
+                throw new Exception("Нет мест на данной специальности.");
+            }
             statement.executeUpdate(
                     """
                     INSERT INTO student
-                    (last_name, first_name, middle_name, class_title_fk)
+                    (last_name, first_name, middle_name, profile_title_fk)
                     values
                     ('%s', '%s', '%s', '%s');
                     """.formatted(lastName, firstName, middleName, classTitleFk)
@@ -68,8 +92,8 @@ public class DataBase {
         try {
             statement.executeUpdate(
                     """
-                    INSERT INTO class
-                    (title, code_direction_training_fk, student_amount)
+                    INSERT INTO profile
+                    (title, code_speciality_fk, student_amount)
                     values
                     ('%s', '%s', %s);
                     """.formatted(title, codeDirectionTrainingFk, studentAmount)
@@ -84,7 +108,7 @@ public class DataBase {
         try {
             statement.executeUpdate(
                     """
-                    INSERT INTO direction_of_training
+                    INSERT INTO speciality
                     (code, title)
                     values
                     ('%s', '%s');
