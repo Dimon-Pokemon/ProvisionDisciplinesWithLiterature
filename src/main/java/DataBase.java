@@ -4,6 +4,8 @@ import java.sql.Statement;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 
 public class DataBase {
 
@@ -19,19 +21,34 @@ public class DataBase {
         }
     }
 
-    public void select(String table, String[] columnArray){
+    /**
+     * Метод позволяет выбрать из любой таблицы любые столбцы.
+     * Основан на простом SELECT запросе.
+     * @param table таблица, к которой будет отправлен запрос.
+     * @param columnArray столбцы, которые будем выбирать из таблицы.
+     */
+    public List<HashMap<String, String>> select(String table, String[] columnArray){
+        List<HashMap<String, String>> result = new ArrayList<>();
         try{
-            ResultSet result = statement.executeQuery(
+            // Выполнение SQL запроса
+            ResultSet resultQuery = statement.executeQuery(
                     """
                     SELECT %s FROM %s;
                     """.formatted(columnArray.length>0 ? String.join(", ", columnArray) : "*", table));
-            while (result.next()){
-                System.out.println("Код: "+result.getString(1)+"; Название: "+result.getString(2));
-
+            // Результат SQL запроса помещается в список.
+            while (resultQuery.next()){
+                //System.out.println("Код: "+result.getString(1)+"; Название: "+result.getString(2));
+                // row - одна строка результата запроса
+                HashMap<String, String> row = new HashMap<>(); // Пары имя_столбца:значение
+                for(int i = 0; i<columnArray.length; i++){
+                    row.put(columnArray[i], resultQuery.getString(i+1));
+                }
+                result.add(row); // Добавляем получившуюся строку в список строк result
             }
         }catch (Exception e){
             e.printStackTrace();
         }
+        return result;
     }
 
     public void addNewRowInTable(String table, String[] columnArray, String[] values){
@@ -63,7 +80,7 @@ public class DataBase {
             while(studentCount.next()){
                 studentCountInt += 1;
             }
-            System.out.println(studentCountInt);
+            //System.out.println(studentCountInt);
             ResultSet studentAmountInClass = statement.executeQuery(
                     """
                     SELECT profile.student_amount FROM profile
@@ -82,37 +99,6 @@ public class DataBase {
                     values
                     ('%s', '%s', '%s', '%s');
                     """.formatted(lastName, firstName, middleName, classTitleFk)
-            );
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public void addClass(String title, String codeDirectionTrainingFk, String studentAmount){
-        try {
-            statement.executeUpdate(
-                    """
-                    INSERT INTO profile
-                    (title, code_speciality_fk, student_amount)
-                    values
-                    ('%s', '%s', %s);
-                    """.formatted(title, codeDirectionTrainingFk, studentAmount)
-            );
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-
-    }
-
-    public void addDirectionOfTraining(String code, String title){
-        try {
-            statement.executeUpdate(
-                    """
-                    INSERT INTO speciality
-                    (code, title)
-                    values
-                    ('%s', '%s');
-                    """.formatted(code, title)
             );
         } catch (Exception e){
             e.printStackTrace();
