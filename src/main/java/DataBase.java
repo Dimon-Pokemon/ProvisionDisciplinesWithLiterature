@@ -47,22 +47,19 @@ public class DataBase {
      */
     public List<HashMap<String, String>> select(String table, String[] columnArray){
         List<HashMap<String, String>> result = new ArrayList<>();
-        if(columnArray.length<1){
-            throw new RuntimeException("Массив столбцов не может быть пустым!");
-        }
         try{
             // Выполнение SQL запроса
             ResultSet resultQuery = statement.executeQuery(
                     """
                     SELECT %s FROM %s;
-                    """.formatted(table, String.join(", ", columnArray)));
+                    """.formatted(columnArray.length>0 ? String.join(", ", columnArray) : "*", table));
             // Результат SQL запроса помещается в список.
             while (resultQuery.next()){
                 //System.out.println("Код: "+result.getString(1)+"; Название: "+result.getString(2));
                 // row - одна строка результата запроса
                 HashMap<String, String> row = new HashMap<>(); // Пары имя_столбца:значение
-                for(int i = 0; i<columnArray.length; i++){
-                    row.put(columnArray[i], resultQuery.getString(i+1));
+                for(int i = 0; i<resultQuery.getMetaData().getColumnCount(); i++){
+                    row.put(resultQuery.getMetaData().getColumnName(i+1), resultQuery.getString(i+1));
                 }
                 result.add(row); // Добавляем получившуюся строку в список строк result
             }
