@@ -21,6 +21,24 @@ public class DataBase {
         }
     }
 
+    public HashMap<String, String> getIsbnAndTitle(){
+        HashMap<String, String> result =  new HashMap<String, String>();
+        try{
+            ResultSet resultQuery = statement.executeQuery(
+                    """
+                     SELECT isbn, title from literature
+                     """
+            );
+            while(resultQuery.next()){
+                result.put(resultQuery.getString("isbn"), resultQuery.getString("title"));
+                //System.out.println("ISBN: "+resultQuery.getString("isbn")+" Название: "+resultQuery.getString("title"));
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+
     /**
      * Метод позволяет выбрать из любой таблицы любые столбцы.
      * Основан на простом SELECT запросе.
@@ -29,12 +47,15 @@ public class DataBase {
      */
     public List<HashMap<String, String>> select(String table, String[] columnArray){
         List<HashMap<String, String>> result = new ArrayList<>();
+        if(columnArray.length<1){
+            throw new RuntimeException("Массив столбцов не может быть пустым!");
+        }
         try{
             // Выполнение SQL запроса
             ResultSet resultQuery = statement.executeQuery(
                     """
                     SELECT %s FROM %s;
-                    """.formatted(columnArray.length>0 ? String.join(", ", columnArray) : "*", table));
+                    """.formatted(table, String.join(", ", columnArray)));
             // Результат SQL запроса помещается в список.
             while (resultQuery.next()){
                 //System.out.println("Код: "+result.getString(1)+"; Название: "+result.getString(2));
@@ -51,11 +72,33 @@ public class DataBase {
         return result;
     }
 
-    public void addNewRowInTable(String table, String[] columnArray, String[] values){
-        try{
-            if (table.equals("student")){
-                throw new Exception("Добавляйте новые записи в student с помощью addStudent");
+    public List<HashMap<String, String>> selectLibraryProfileSpeciality(){ //List<HashMap<String, String>>
+        String sql =
+                """
+                select * from profile p
+                join speciality s on s.code = p.code_speciality_fk
+                join "library" l on l.profile_title_fk = p.title;
+                """;
+        List<HashMap<String, String>> result = new ArrayList<>();
+        try {
+            ResultSet resultQuery = statement.executeQuery(sql);
+            while (resultQuery.next()){
+                // row - одна строка результата запроса
+                HashMap<String, String> row = new HashMap<>(); // Пары имя_столбца:значение
+                for(int i = 0; i<resultQuery.getMetaData().getColumnCount(); i++){
+                    row.put(resultQuery.getMetaData().getColumnName(i+1), resultQuery.getString(i+1));
+//                    System.out.println("Колонка: "+resultQuery.getMetaData().getColumnName(i+1)+" Значение: "+row.get(resultQuery.getMetaData().getColumnName(i+1)));
+                }
+                result.add(row); // Добавляем получившуюся строку в список строк result
             }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public void addNewRowInTable(String table, String[] columnArray, String[] values){
+        try {
             statement.executeUpdate(
                     """
                     INSERT INTO %s
@@ -63,45 +106,9 @@ public class DataBase {
                     values
                     (%s);
                     """.formatted(table, String.join(", ", columnArray), String.join(", ", values)));
-        }catch (Exception e){
-            e.printStackTrace();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
 
-    }
-
-    public void addStudent(String lastName, String firstName, String middleName, String classTitleFk){
-        try {
-            int studentCountInt = 0;
-            ResultSet studentCount = statement.executeQuery(
-                    """
-                    SELECT student.id FROM student
-                    WHERE student.profile_title_fk = '%s';
-                    """.formatted(classTitleFk)); // Получаем кол-во записей студентов на данном специальности
-            while(studentCount.next()){
-                studentCountInt += 1;
-            }
-            //System.out.println(studentCountInt);
-            ResultSet studentAmountInClass = statement.executeQuery(
-                    """
-                    SELECT profile.student_amount FROM profile
-                    WHERE profile.title = '%s';
-                    """.formatted(classTitleFk));
-            int studentAmountInClassInt = 0;
-            while (studentAmountInClass.next())
-                studentAmountInClassInt = studentAmountInClass.getInt(1);
-            if (studentCountInt >= studentAmountInClassInt){
-                throw new Exception("Нет мест на данной специальности.");
-            }
-            statement.executeUpdate(
-                    """
-                    INSERT INTO student
-                    (last_name, first_name, middle_name, profile_title_fk)
-                    values
-                    ('%s', '%s', '%s', '%s');
-                    """.formatted(lastName, firstName, middleName, classTitleFk)
-            );
-        } catch (Exception e){
-            e.printStackTrace();
-        }
     }
 }
