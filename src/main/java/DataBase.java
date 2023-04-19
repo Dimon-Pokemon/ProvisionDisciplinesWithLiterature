@@ -1,9 +1,7 @@
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.Statement;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -21,8 +19,18 @@ public class DataBase {
         }
     }
 
+
+    public DataBase(String url, String user, String password){
+        try {
+            this.connection = DriverManager.getConnection(url, user, password);
+            this.statement = connection.createStatement();
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+    }
+
     public HashMap<String, String> getIsbnAndTitle(){
-        HashMap<String, String> result =  new HashMap<String, String>();
+        HashMap<String, String> result = new HashMap<>();
         try{
             ResultSet resultQuery = statement.executeQuery(
                     """
@@ -31,7 +39,6 @@ public class DataBase {
             );
             while(resultQuery.next()){
                 result.put(resultQuery.getString("isbn"), resultQuery.getString("title"));
-                //System.out.println("ISBN: "+resultQuery.getString("isbn")+" Название: "+resultQuery.getString("title"));
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -72,7 +79,7 @@ public class DataBase {
         return select(table, new String[]{});
     }
 
-    public List<HashMap<String, String>> selectLibraryProfileSpeciality(){ //List<HashMap<String, String>>
+    public List<HashMap<String, String>> selectLibraryProfileSpeciality(){
         String sql =
                 """
                 select * from profile p
