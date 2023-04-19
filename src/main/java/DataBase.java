@@ -55,7 +55,6 @@ public class DataBase {
                     """.formatted(columnArray.length>0 ? String.join(", ", columnArray) : "*", table));
             // Результат SQL запроса помещается в список.
             while (resultQuery.next()){
-                //System.out.println("Код: "+result.getString(1)+"; Название: "+result.getString(2));
                 // row - одна строка результата запроса
                 HashMap<String, String> row = new HashMap<>(); // Пары имя_столбца:значение
                 for(int i = 0; i<resultQuery.getMetaData().getColumnCount(); i++){
@@ -67,6 +66,10 @@ public class DataBase {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public List<HashMap<String, String>> select(String table){
+        return select(table, new String[]{});
     }
 
     public List<HashMap<String, String>> selectLibraryProfileSpeciality(){ //List<HashMap<String, String>>
@@ -84,7 +87,6 @@ public class DataBase {
                 HashMap<String, String> row = new HashMap<>(); // Пары имя_столбца:значение
                 for(int i = 0; i<resultQuery.getMetaData().getColumnCount(); i++){
                     row.put(resultQuery.getMetaData().getColumnName(i+1), resultQuery.getString(i+1));
-//                    System.out.println("Колонка: "+resultQuery.getMetaData().getColumnName(i+1)+" Значение: "+row.get(resultQuery.getMetaData().getColumnName(i+1)));
                 }
                 result.add(row); // Добавляем получившуюся строку в список строк result
             }

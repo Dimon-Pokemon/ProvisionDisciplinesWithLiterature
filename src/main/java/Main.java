@@ -4,8 +4,23 @@ import java.util.List;
 public class Main {
     public static void main(String[] args){
         DataBase db = new DataBase();
-        //db.selectLibraryProfileSpeciality();
+        getLiterature(db);
         specialtiesIsProvidedWithBooks(db);
+    }
+
+    private static void getLiterature(DataBase db){
+        List<HashMap<String, String>> allLit = db.select("literature");
+        System.out.println("В распоряжении есть следующие книги: ");
+        for(HashMap<String, String> book : allLit){
+            System.out.println(
+                    """
+                    ############################################################################
+                    \t-Название: %s;
+                    \t-Издание:  %s;
+                    \t-ISBN код: %s;
+                    ############################################################################
+                    """.formatted(book.get("title"), book.get("edition"), book.get("isbn")));
+        }
     }
 
     private static void specialtiesIsProvidedWithBooks(DataBase db){
